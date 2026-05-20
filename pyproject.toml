@@ -32,5 +32,11 @@ line-length = 100
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "W", "UP"]
 
+[project.scripts]
+unplug-mcp = "unplug_mcp.server:main"
+
+[tool.uv.sources]
+unplug = { path = "../../jakarta/sdk", editable = true }
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
