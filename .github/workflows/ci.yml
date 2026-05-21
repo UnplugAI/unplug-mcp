@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  lint-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Checkout Unplug SDK
+        uses: actions/checkout@v4
+        with:
+          repository: chiruu12/Unplug
+          path: Unplug
+          sparse-checkout: sdk
+
+      - name: Patch SDK path
+        run: sed -i 's|path = "../../jakarta/sdk"|path = "../Unplug/sdk"|' pyproject.toml
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install
+        run: uv sync --dev
+
+      - name: Ruff
+        run: uv run ruff check . && uv run ruff format --check .
+
+      - name: Tests
+        run: uv run pytest -q
