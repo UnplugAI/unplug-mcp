@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from typing import Any
 
 from mcp.server.fastmcp import FastMCP
@@ -14,14 +15,26 @@ _guard: Guard | None = None
 def _get_guard() -> Guard:
     global _guard
     if _guard is None:
-        _guard = Guard()
+        mode = os.environ.get("UNPLUG_MODE", "local")
+        _guard = Guard(
+            mode=mode,
+            server_url=os.environ.get("UNPLUG_SERVER_URL"),
+            server_api_key=os.environ.get("UNPLUG_API_KEY"),
+        )
     return _guard
 
 
 @mcp.tool()
-def scan_text(text: str, source: str = "user") -> dict[str, Any]:
+def scan_text(
+    text: str,
+    source: str = "user",
+    document_id: str | None = None,
+) -> dict[str, Any]:
     """Scan arbitrary text for prompt injection and related threats."""
-    result = _get_guard().scan(text, source=source)
+    guard = _get_guard()
+    if document_id:
+        guard.context.document_id = document_id
+    result = guard.scan(text, source=source)
     return {
         "safe": result.safe,
         "action": result.action.value,
