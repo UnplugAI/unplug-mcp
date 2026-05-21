@@ -15,13 +15,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Checkout Unplug SDK
-        uses: actions/checkout@v4
-        with:
-          repository: chiruu12/Unplug
-          ref: feature/release-0.3-ci
-          path: Unplug
-
       - uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
@@ -31,8 +24,9 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Patch SDK path
-        run: sed -i 's|path = "../../jakarta/sdk"|path = "../Unplug/sdk"|' pyproject.toml
+      - name: Point unplug SDK at feature branch
+        run: |
+          sed -i 's|unplug = { path = "../../jakarta/sdk", editable = true }|unplug = { git = "https://github.com/chiruu12/Unplug.git", branch = "feature/release-0.3-ci", subdirectory = "sdk" }|' pyproject.toml
 
       - name: Install
         run: uv sync --dev
