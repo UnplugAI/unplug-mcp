@@ -29,7 +29,7 @@ jobs:
           sed -i 's|unplug = { path = "../../jakarta/sdk", editable = true }|unplug = { git = "https://github.com/chiruu12/Unplug.git", branch = "feature/release-0.3-ci", subdirectory = "sdk" }|' pyproject.toml
 
       - name: Install
-        run: uv sync --dev
+        run: uv sync --extra dev
 
       - name: Ruff
         run: uv run ruff check . && uv run ruff format --check .
