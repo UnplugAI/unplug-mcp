@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from unplug.core.boundaries import strip_boundary_markers
+
 from unplug_mcp.boundary import notify_taint_source, reset_session_taint, wrap_untrusted_content
 from unplug_mcp.guard_factory import reset_guard
 from unplug_mcp.server import check_destructive, scan_text

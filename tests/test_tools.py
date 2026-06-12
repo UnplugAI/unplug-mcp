@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+from unplug.api.enums import Action
+from unplug.api.types import Finding, ScanResult
+
 from unplug_mcp.guard_factory import get_guard, reset_guard
 from unplug_mcp.response import format_scan_response
 from unplug_mcp.server import check_destructive, scan_text, scan_tool_result
-from unplug.api.enums import Action
-from unplug.api.types import Finding, ScanResult
 
 
 def test_format_scan_response_includes_tags_and_redaction() -> None:

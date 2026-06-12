@@ -10,6 +10,7 @@ from pathlib import Path
 
 from unplug.audit.boundary import default_boundary_probes_path, run_boundary_probe_suite
 from unplug.audit.runner import run_audit
+
 from unplug_mcp.test_agent.env import WORKSPACE_ROOT
 from unplug_mcp.test_agent.runner import (
     run_encoding_only,

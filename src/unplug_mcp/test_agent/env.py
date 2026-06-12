@@ -7,8 +7,7 @@ from pathlib import Path
 
 WORKSPACE_ROOT = Path(__file__).resolve().parents[5]
 DEFAULT_CHECKPOINT = (
-    WORKSPACE_ROOT
-    / "repos/unplug_exp/dist/vm-v10-750k-diagnostic-bundle/"
+    WORKSPACE_ROOT / "repos/unplug_exp/dist/vm-v10-750k-diagnostic-bundle/"
     "experiments/unplug-tiny-v10-350k/checkpoint-24615"
 )
 DEFAULT_PROBES = WORKSPACE_ROOT / "repos/unplug_exp/configs/fp_probe_queries.json"

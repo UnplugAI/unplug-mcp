@@ -58,7 +58,9 @@ def run_agent(
                 "temperature": temperature,
                 "max_completion_tokens": max_tokens,
             }
-            resp = client.post(f"{_resolve_base_url()}/chat/completions", json=payload, headers=headers)
+            resp = client.post(
+                f"{_resolve_base_url()}/chat/completions", json=payload, headers=headers
+            )
             resp.raise_for_status()
             body = resp.json()
             choice = body["choices"][0]

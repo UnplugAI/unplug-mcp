@@ -1767,7 +1767,7 @@ wheels = [
 
 [[package]]
 name = "unplug-ai"
-version = "0.2.1"
+version = "0.2.3"
 source = { editable = "../../jakarta/sdk" }
 dependencies = [
     { name = "httpx" },

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from typing import Any
 
 from unplug_mcp.boundary import (
@@ -10,7 +9,6 @@ from unplug_mcp.boundary import (
     reset_session_taint,
     wrap_untrusted_content,
 )
-from unplug_mcp.guard_factory import reset_guard
 from unplug_mcp.server import check_destructive, scan_text, scan_tool_result
 from unplug_mcp.test_agent.probes import run_fp_probe_suite
 from unplug_mcp.test_agent.sdk_suite import get_guard_status, run_sdk_integration_suite

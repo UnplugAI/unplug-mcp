@@ -8,7 +8,7 @@ requires-python = ">=3.11"
 authors = [{ name = "Chirag Gupta" }]
 
 dependencies = [
-    "unplug-ai>=0.2.2",
+    "unplug-ai>=0.2.3",
     "mcp>=1.0",
 ]
 

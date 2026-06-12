@@ -8,7 +8,6 @@ from typing import Any
 from unplug import Guard
 from unplug.config.loader import load
 
-
 _guard: Guard | None = None
 _guard_fingerprint: tuple[Any, ...] | None = None
 
