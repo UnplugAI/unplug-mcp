@@ -24,15 +24,13 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Point unplug SDK at feature branch
-        run: |
-          sed -i 's|unplug = { path = "../../jakarta/sdk", editable = true }|unplug = { git = "https://github.com/chiruu12/Unplug.git", branch = "feature/release-0.3-ci", subdirectory = "sdk" }|' pyproject.toml
-
-      - name: Install
-        run: uv sync --extra dev
+      - name: Install (PyPI SDK, ignore local path sources)
+        run: uv sync --extra dev --no-sources
 
       - name: Ruff
-        run: uv run ruff check . && uv run ruff format --check .
+        run: |
+          uv run --no-sources ruff check .
+          uv run --no-sources ruff format --check .
 
       - name: Tests
-        run: uv run pytest -q
+        run: uv run --no-sources pytest -q
