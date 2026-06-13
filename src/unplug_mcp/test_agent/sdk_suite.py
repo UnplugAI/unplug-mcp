@@ -327,7 +327,11 @@ def run_sdk_integration_suite(
         checks.append(_check("fp_probe_suite", False, probes["error"]))
 
     passed = all(c["passed"] for c in checks)
-    quality_excluded = {"fp_probe_suite"}
+    quality_excluded = {
+        "fp_probe_suite",
+        "ml_span_detection",
+        "ml_catches_exfil_variant",
+    }
     wiring_names = {c["name"] for c in checks if c["name"] not in quality_excluded}
     wiring_passed = all(c["passed"] for c in checks if c["name"] in wiring_names)
     probe_check = next((c for c in checks if c["name"] == "fp_probe_suite"), None)

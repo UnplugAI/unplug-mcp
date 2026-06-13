@@ -1,0 +1,46 @@
+name: Publish to PyPI
+
+# Token: GitHub Environment "pypi", secret "PYPI_TOKEN".
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: pypi
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          version: "0.6.14"
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install (PyPI SDK, ignore local path sources)
+        run: uv sync --extra dev --no-sources
+
+      - name: Ruff
+        run: |
+          uv run --no-sources ruff check .
+          uv run --no-sources ruff format --check .
+
+      - name: Tests
+        run: uv run --no-sources pytest -q
+
+      - name: Build
+        run: uv build --no-sources
+
+      - name: Publish unplug-mcp
+        env:
+          UV_PUBLISH_TOKEN: ${{ secrets.PYPI_TOKEN }}
+        run: uv publish --check-url https://pypi.org/pypi/unplug-mcp/json
