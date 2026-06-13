@@ -30,4 +30,4 @@ jobs:
             "unplug-ai @ git+https://github.com/UnplugAI/Unplug.git@dev#subdirectory=sdk"
 
       - name: Scan changed agent files
-        run: unplug-scan-pr --base-ref main
+        run: python -m unplug.cli.scan_pr --base-ref main
