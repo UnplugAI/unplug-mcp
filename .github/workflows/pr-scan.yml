@@ -24,10 +24,10 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install unplug-ai (dev SDK until unplug-scan-pr ships on PyPI)
+      - name: Install unplug-ai (pinned SDK commit for scan CLI)
         run: |
           uv pip install --system \
-            "unplug-ai @ git+https://github.com/UnplugAI/Unplug.git@dev#subdirectory=sdk"
+            "unplug-ai @ git+https://github.com/UnplugAI/Unplug.git@239376061553bf379becdcf8c9ed91b3ca4626c1#subdirectory=sdk"
 
       - name: Scan changed agent files
         run: python -m unplug.cli.scan_pr --base-ref main
