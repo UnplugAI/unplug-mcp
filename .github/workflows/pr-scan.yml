@@ -1,19 +1,19 @@
-name: CI
+name: PR agent scan
 
 on:
   pull_request:
-    branches: [main]
-  push:
     branches: [main]
 
 permissions:
   contents: read
 
 jobs:
-  lint-test:
+  scan:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - uses: astral-sh/setup-uv@v7
         with:
@@ -24,13 +24,10 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install (PyPI SDK, ignore local path sources)
-        run: uv sync --extra dev --no-sources
-
-      - name: Ruff
+      - name: Install unplug-ai (dev SDK until unplug-scan-pr ships on PyPI)
         run: |
-          uv run --no-sources ruff check .
-          uv run --no-sources ruff format --check .
+          uv pip install --system \
+            "unplug-ai @ git+https://github.com/UnplugAI/Unplug.git@dev#subdirectory=sdk"
 
-      - name: Tests
-        run: uv run --no-sources pytest -q
+      - name: Scan changed agent files
+        run: unplug-scan-pr --base-ref main

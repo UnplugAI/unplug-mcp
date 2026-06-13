@@ -20,4 +20,5 @@ htmlcov/
 coverage.xml
 
 .context/
+reports/
 *.log
