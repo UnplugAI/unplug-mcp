@@ -1,16 +1,34 @@
 [project]
 name = "unplug-mcp"
-version = "0.1.0"
+version = "0.1.1"
 description = "MCP server for Unplug — LLM defense layer for Claude Code, Cursor, and more"
 readme = "README.md"
 license = "Apache-2.0"
 requires-python = ">=3.11"
 authors = [{ name = "Chirag Gupta" }]
+keywords = ["llm", "mcp", "prompt-injection", "ai-safety", "guardrails", "cursor", "claude"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Security",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
 
 dependencies = [
-    "unplug-ai>=0.3.0",
+    "unplug-ai>=0.3.1",
     "mcp>=1.0",
 ]
+
+[project.urls]
+Homepage = "https://unplug-ai.org"
+Repository = "https://github.com/UnplugAI/unplug-mcp"
+Issues = "https://github.com/UnplugAI/unplug-mcp/issues"
+Documentation = "https://github.com/UnplugAI/unplug-mcp#readme"
 
 [project.optional-dependencies]
 dev = [
