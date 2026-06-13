@@ -1,0 +1,33 @@
+name: PR agent scan
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          version: "0.6.14"
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install unplug-ai (pinned SDK commit for scan CLI)
+        run: |
+          uv pip install --system \
+            "unplug-ai @ git+https://github.com/UnplugAI/Unplug.git@239376061553bf379becdcf8c9ed91b3ca4626c1#subdirectory=sdk"
+
+      - name: Scan changed agent files
+        run: python -m unplug.cli.scan_pr --base-ref main
