@@ -52,6 +52,17 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["src/unplug_mcp"]
 
+[tool.hatch.build.targets.sdist]
+exclude = [
+    ".uv-cache",
+    "reports",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".mypy_cache",
+    ".venv",
+    ".github",
+]
+
 [tool.ruff]
 target-version = "py311"
 line-length = 100
