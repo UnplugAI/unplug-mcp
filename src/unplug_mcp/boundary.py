@@ -6,7 +6,11 @@ from typing import Any, Literal
 
 from unplug.api.enums import Source
 from unplug.api.types import ScanRequest
-from unplug.core.boundaries import SourceKind, sanitize_boundary_markers, wrap_external_content
+from unplug.core.agent.boundaries import (
+    SourceKind,
+    sanitize_boundary_markers,
+    wrap_external_content,
+)
 
 from unplug_mcp.guard_factory import get_guard
 from unplug_mcp.response import format_scan_response
