@@ -89,9 +89,7 @@ def scan_text(
         guard = get_guard()
         if document_id:
             guard.context.document_id = document_id
-        request = ScanRequest(
-            text=text, source=scan_source, redact=redact, document_id=document_id
-        )
+        request = ScanRequest(text=text, source=scan_source, redact=redact, document_id=document_id)
         result = guard.scan_request(request, isolated=not _track_session_taint(scan_source))
         body = format_scan_response(result, source_text=text)
         body["session"] = session_status()
