@@ -37,6 +37,10 @@ def resolve_scan_source(source: str | Source) -> Source:
     """Map an arbitrary source label to a valid scan Source (fail-safe untrusted)."""
     if isinstance(source, Source):
         return source
+    if not isinstance(source, str):
+        # None (e.g. a JSON null from an MCP client) or any non-string type maps
+        # to the most cautious untrusted source instead of raising.
+        return Source.RETRIEVED
     try:
         return Source(source)
     except ValueError:

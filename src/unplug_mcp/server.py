@@ -64,7 +64,23 @@ def _blocked_body(exc: Exception, *, source_text: str | None = None) -> dict[str
         ],
         latency_ms=0.0,
     )
-    body = format_scan_response(result, source_text=source_text)
+    try:
+        body = format_scan_response(result, source_text=source_text)
+    except Exception:  # pragma: no cover - the fail-closed path must never raise
+        # Last-resort hardcoded BLOCK body so an agent can never read this error
+        # path as "proceed", even if the formatter itself fails.
+        body = {
+            "safe": False,
+            "action": Action.BLOCK.value,
+            "risk_score": 1.0,
+            "finding_count": 0,
+            "findings": [],
+            "redacted_text": None,
+            "stages_run": ["error"],
+            "latency_ms": 0.0,
+            "has_redaction": False,
+            "error": "tool_error",
+        }
     try:
         body["session"] = session_status()
     except Exception:  # pragma: no cover - status is best-effort on the error path
@@ -95,7 +111,7 @@ def scan_text(
         body["session"] = session_status()
         return body
     except Exception as exc:
-        _log.error("scan_text failed: %s", exc)
+        _log.error("scan_text failed: %s", type(exc).__name__)
         return _blocked_body(exc, source_text=text)
 
 
@@ -110,7 +126,7 @@ def scan_tool_result(text: str, redact: bool = True) -> dict[str, Any]:
         body["session"] = session_status()
         return body
     except Exception as exc:
-        _log.error("scan_tool_result failed: %s", exc)
+        _log.error("scan_tool_result failed: %s", type(exc).__name__)
         return _blocked_body(exc, source_text=text)
 
 
@@ -124,7 +140,7 @@ def check_destructive(tool_name: str, arguments_json: str = "{}") -> dict[str, A
             args = json.loads(arguments_json) if arguments_json else {}
         except (json.JSONDecodeError, TypeError) as exc:
             # Malformed arguments are unverifiable — block rather than proceed.
-            _log.error("check_destructive could not parse arguments_json: %s", exc)
+            _log.error("check_destructive could not parse arguments_json: %s", type(exc).__name__)
             return _blocked_body(exc)
         if not isinstance(args, dict):
             args = {"_raw": args}
@@ -133,7 +149,7 @@ def check_destructive(tool_name: str, arguments_json: str = "{}") -> dict[str, A
         body["session"] = session_status()
         return body
     except Exception as exc:
-        _log.error("check_destructive failed: %s", exc)
+        _log.error("check_destructive failed: %s", type(exc).__name__)
         return _blocked_body(exc)
 
 
@@ -144,7 +160,7 @@ def notify_taint_source(tool_name: str, origin: str = "") -> dict[str, Any]:
         return _notify_taint_source(tool_name, origin=origin)
     except Exception as exc:
         # Conservative on failure: report tainted so side-effect gates stay closed.
-        _log.error("notify_taint_source failed: %s", exc)
+        _log.error("notify_taint_source failed: %s", type(exc).__name__)
         return {
             "error": type(exc).__name__,
             "session_tainted": True,
@@ -159,7 +175,7 @@ def reset_session_taint() -> dict[str, Any]:
         return _reset_session_taint()
     except Exception as exc:
         # Failing to clear leaves the session tainted, which is the safe direction.
-        _log.error("reset_session_taint failed: %s", exc)
+        _log.error("reset_session_taint failed: %s", type(exc).__name__)
         return {"error": type(exc).__name__, "session_tainted": True}
 
 
@@ -182,7 +198,7 @@ def wrap_untrusted_content(
         )
     except Exception as exc:
         # Block on failure rather than handing back unscanned untrusted content.
-        _log.error("wrap_untrusted_content failed: %s", exc)
+        _log.error("wrap_untrusted_content failed: %s", type(exc).__name__)
         body = _blocked_body(exc, source_text=text)
         body["wrapped_text"] = None
         body["sanitized"] = False

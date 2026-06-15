@@ -43,6 +43,13 @@ class TestResolveScanSource:
     def test_label_is_case_insensitive(self) -> None:
         assert resolve_scan_source("WEB_FETCH") is Source.RETRIEVED
 
+    def test_none_maps_to_retrieved(self) -> None:
+        # A JSON null from an MCP client must map to untrusted, not raise.
+        assert resolve_scan_source(None) is Source.RETRIEVED  # type: ignore[arg-type]
+
+    def test_non_string_maps_to_retrieved(self) -> None:
+        assert resolve_scan_source(123) is Source.RETRIEVED  # type: ignore[arg-type]
+
 
 class TestCheckDestructiveFailsClosed:
     def test_malformed_json_blocks(self) -> None:
@@ -154,3 +161,18 @@ class TestToolErrorsBlock:
         out = reset_session_taint()
         assert out["session_tainted"] is True
         assert "error" in out
+
+
+class TestBlockedBodyNeverRaises:
+    """The fail-closed helper is the last line of defence — it must never raise."""
+
+    def test_blocked_body_survives_formatter_failure(self, monkeypatch) -> None:
+        def boom(*_args, **_kwargs):
+            raise RuntimeError("formatter exploded")
+
+        monkeypatch.setattr(server, "format_scan_response", boom)
+        body = server._blocked_body(ValueError("orig"), source_text="x")
+        assert body["safe"] is False
+        assert body["action"] == "block"
+        assert body["risk_score"] == 1.0
+        assert "session" in body
