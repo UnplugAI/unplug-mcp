@@ -1817,10 +1817,10 @@ ml = [
 requires-dist = [
     { name = "httpx", marker = "extra == 'agent'", specifier = ">=0.27" },
     { name = "httpx", marker = "extra == 'dev'", specifier = ">=0.27" },
-    { name = "mcp", specifier = ">=1.0" },
+    { name = "mcp", specifier = ">=1.0,<2" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.4" },
-    { name = "unplug-ai", specifier = ">=0.3.1" },
+    { name = "unplug-ai", specifier = ">=0.3.1,<0.4" },
     { name = "unplug-ai", extras = ["ml"], marker = "extra == 'agent'" },
     { name = "unplug-ai", extras = ["ml"], marker = "extra == 'dev'" },
     { name = "unplug-ai", extras = ["ml"], marker = "extra == 'ml'" },

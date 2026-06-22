@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "unplug": {
+      "command": "uvx",
+      "args": ["unplug-mcp"]
+    }
+  }
+}

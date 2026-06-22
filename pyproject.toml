@@ -20,8 +20,8 @@ classifiers = [
 ]
 
 dependencies = [
-    "unplug-ai>=0.3.1",
-    "mcp>=1.0",
+    "unplug-ai>=0.3.1,<0.4",
+    "mcp>=1.0,<2",
 ]
 
 [project.urls]
@@ -29,6 +29,7 @@ Homepage = "https://unplug-ai.org"
 Repository = "https://github.com/UnplugAI/unplug-mcp"
 Issues = "https://github.com/UnplugAI/unplug-mcp/issues"
 Documentation = "https://github.com/UnplugAI/unplug-mcp#readme"
+Changelog = "https://github.com/UnplugAI/unplug-mcp/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
 dev = [
