@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [0.1.2] — 2026-06-16
+
+- Distribution docs: CHANGELOG, MARKETPLACE, PUBLISH, examples/mcp.json
+- README: PyPI badges, uvx install, env vars, all MCP tools
+- Tighten deps to unplug-ai>=0.3.1,<0.4 and mcp>=1.0,<2
+
 ## [0.1.1] — 2026-06-13
 
 - Initial PyPI release
