@@ -51,14 +51,18 @@ def resolve_scan_source(source: str | Source) -> Source:
         return _SOURCE_LABEL_MAP.get(source.strip().lower(), Source.RETRIEVED)
 
 
+def _session_status_locked(guard) -> dict[str, Any]:
+    return {
+        "session_tainted": guard.context.is_session_tainted,
+        "taint_triggers": list(guard.context.taint_triggers),
+        "tool_call_count": len(guard.context.tool_calls),
+    }
+
+
 def session_status() -> dict[str, Any]:
     with guard_session_lock():
         guard = get_guard()
-        return {
-            "session_tainted": guard.context.is_session_tainted,
-            "taint_triggers": list(guard.context.taint_triggers),
-            "tool_call_count": len(guard.context.tool_calls),
-        }
+        return _session_status_locked(guard)
 
 
 def notify_taint_source(tool_name: str, *, origin: str = "") -> dict[str, Any]:
@@ -66,7 +70,7 @@ def notify_taint_source(tool_name: str, *, origin: str = "") -> dict[str, Any]:
     with guard_session_lock():
         guard = get_guard()
         guard.notify_taint_source(tool_name, origin=origin)
-    status = session_status()
+        status = _session_status_locked(guard)
     status["tool_name"] = tool_name
     if origin:
         status["origin"] = origin
@@ -76,8 +80,9 @@ def notify_taint_source(tool_name: str, *, origin: str = "") -> dict[str, Any]:
 def reset_session_taint() -> dict[str, Any]:
     """Clear session taint (e.g. new trusted user turn)."""
     with guard_session_lock():
-        get_guard().reset_session_taint()
-    return session_status()
+        guard = get_guard()
+        guard.reset_session_taint()
+        return _session_status_locked(guard)
 
 
 def _scan_content(
@@ -86,9 +91,9 @@ def _scan_content(
     source: SourceArg,
     redact: bool,
 ) -> dict[str, Any]:
-    guard = get_guard()
     scan_source = resolve_scan_source(source)
     with guard_session_lock():
+        guard = get_guard()
         if scan_source == Source.TOOL_OUTPUT:
             request = ScanRequest(text=text, source=Source.TOOL_OUTPUT, redact=redact)
             result = guard.scan_output_request(request, isolated=False)

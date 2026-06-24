@@ -18,10 +18,7 @@ jobs:
           path: repos/unplug-mcp
 
       - name: Check out SDK
-        uses: actions/checkout@v6
-        with:
-          repository: UnplugAI/Unplug
-          path: jakarta
+        run: git clone --depth 1 https://github.com/UnplugAI/Unplug.git jakarta
 
       - uses: astral-sh/setup-uv@v7
         with:

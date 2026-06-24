@@ -10,15 +10,9 @@ from unplug.api.types import Finding, ScanRequest, ScanResult
 
 from unplug_mcp.boundary import (
     notify_taint_source as _notify_taint_source,
-)
-from unplug_mcp.boundary import (
     reset_session_taint as _reset_session_taint,
-)
-from unplug_mcp.boundary import (
     resolve_scan_source,
     session_status as _session_status,
-)
-from unplug_mcp.boundary import (
     wrap_untrusted_content as _wrap_untrusted_content,
 )
 from unplug_mcp.guard_factory import get_guard, guard_session_lock
@@ -102,15 +96,17 @@ def scan_text(
     """
     try:
         scan_source = resolve_scan_source(source)
-        guard = get_guard()
         if document_id:
-            guard.context.document_id = document_id
+            with guard_session_lock():
+                get_guard().context.document_id = document_id
         request = ScanRequest(text=text, source=scan_source, redact=redact, document_id=document_id)
         isolated = not _track_session_taint(scan_source)
         if isolated:
+            guard = get_guard()
             result = guard.scan_request(request, isolated=True)
         else:
             with guard_session_lock():
+                guard = get_guard()
                 result = guard.scan_request(request, isolated=False)
         body = format_scan_response(result, source_text=text, guard=guard)
         body["session"] = _session_status()
@@ -124,9 +120,9 @@ def scan_text(
 def scan_tool_result(text: str, redact: bool = True) -> dict[str, Any]:
     """Scan tool output before the agent processes it (source=tool_output)."""
     try:
-        guard = get_guard()
         request = ScanRequest(text=text, source=Source.TOOL_OUTPUT, redact=redact)
         with guard_session_lock():
+            guard = get_guard()
             result = guard.scan_output_request(request, isolated=False)
         body = format_scan_response(result, source_text=text, guard=guard)
         body["session"] = _session_status()
@@ -150,8 +146,8 @@ def check_destructive(tool_name: str, arguments_json: str = "{}") -> dict[str, A
             return _blocked_body(exc)
         if not isinstance(args, dict):
             args = {"_raw": args}
-        guard = get_guard()
         with guard_session_lock():
+            guard = get_guard()
             result = guard.check_tool_call(tool_name, args)
         body = format_scan_response(result, guard=guard)
         body["session"] = _session_status()
