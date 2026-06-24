@@ -4,15 +4,15 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from unplug.api.enums import Source
-from unplug.api.types import ScanRequest
+from unplug.api.enums import Action, Source
+from unplug.api.types import Finding, ScanRequest, ScanResult
 from unplug.core.agent.boundaries import (
     SourceKind,
     sanitize_boundary_markers,
     wrap_external_content,
 )
 
-from unplug_mcp.guard_factory import get_guard
+from unplug_mcp.guard_factory import get_guard, guard_session_lock
 from unplug_mcp.response import format_scan_response
 
 SourceArg = Literal["retrieved", "tool_output", "external", "web_fetch", "email", "file"]
@@ -51,8 +51,7 @@ def resolve_scan_source(source: str | Source) -> Source:
         return _SOURCE_LABEL_MAP.get(source.strip().lower(), Source.RETRIEVED)
 
 
-def session_status() -> dict[str, Any]:
-    guard = get_guard()
+def _session_status_locked(guard) -> dict[str, Any]:
     return {
         "session_tainted": guard.context.is_session_tainted,
         "taint_triggers": list(guard.context.taint_triggers),
@@ -60,11 +59,18 @@ def session_status() -> dict[str, Any]:
     }
 
 
+def session_status() -> dict[str, Any]:
+    with guard_session_lock():
+        guard = get_guard()
+        return _session_status_locked(guard)
+
+
 def notify_taint_source(tool_name: str, *, origin: str = "") -> dict[str, Any]:
     """Mark session tainted after a taint-source tool runs (web_fetch, read_file, …)."""
-    guard = get_guard()
-    guard.notify_taint_source(tool_name, origin=origin)
-    status = session_status()
+    with guard_session_lock():
+        guard = get_guard()
+        guard.notify_taint_source(tool_name, origin=origin)
+        status = _session_status_locked(guard)
     status["tool_name"] = tool_name
     if origin:
         status["origin"] = origin
@@ -73,8 +79,10 @@ def notify_taint_source(tool_name: str, *, origin: str = "") -> dict[str, Any]:
 
 def reset_session_taint() -> dict[str, Any]:
     """Clear session taint (e.g. new trusted user turn)."""
-    get_guard().reset_session_taint()
-    return session_status()
+    with guard_session_lock():
+        guard = get_guard()
+        guard.reset_session_taint()
+        return _session_status_locked(guard)
 
 
 def _scan_content(
@@ -83,15 +91,37 @@ def _scan_content(
     source: SourceArg,
     redact: bool,
 ) -> dict[str, Any]:
-    guard = get_guard()
     scan_source = resolve_scan_source(source)
-    if scan_source == Source.TOOL_OUTPUT:
-        request = ScanRequest(text=text, source=Source.TOOL_OUTPUT, redact=redact)
-        result = guard.scan_output_request(request, isolated=False)
-    else:
-        request = ScanRequest(text=text, source=scan_source, redact=redact)
-        result = guard.scan_request(request, isolated=scan_source.value not in _TAINT_SOURCES)
-    return format_scan_response(result, source_text=text)
+    with guard_session_lock():
+        guard = get_guard()
+        if scan_source == Source.TOOL_OUTPUT:
+            request = ScanRequest(text=text, source=Source.TOOL_OUTPUT, redact=redact)
+            result = guard.scan_output_request(request, isolated=False)
+        else:
+            request = ScanRequest(text=text, source=scan_source, redact=redact)
+            result = guard.scan_request(request, isolated=scan_source.value not in _TAINT_SOURCES)
+    return format_scan_response(result, source_text=text, guard=guard)
+
+
+def _scan_disabled_block(text: str) -> dict[str, Any]:
+    result = ScanResult(
+        safe=False,
+        action=Action.BLOCK,
+        risk_score=1.0,
+        findings=[
+            Finding(
+                category="mcp",
+                subcategory="scan_disabled",
+                stage="boundary",
+                span_start=0,
+                span_end=len(text),
+                score=1.0,
+                evidence="scan=false is not allowed for untrusted content wrapping",
+            )
+        ],
+        latency_ms=0.0,
+    )
+    return format_scan_response(result, source_text=text, guard=get_guard())
 
 
 def wrap_untrusted_content(
@@ -117,6 +147,16 @@ def wrap_untrusted_content(
         "session": session_status(),
     }
     if not scan:
+        scan_out = _scan_disabled_block(body)
+        out["scan"] = scan_out
+        out["safe"] = False
+        out["action"] = Action.BLOCK.value
+        out["wrapped_text"] = wrap_external_content(
+            scan_out["redacted_text"],
+            source=kind,
+            marker_id=wrapped.marker_id,
+            sanitize=False,
+        ).text
         return out
 
     scan_out = _scan_content(body, source=source, redact=redact)

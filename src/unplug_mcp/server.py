@@ -16,12 +16,14 @@ from unplug_mcp.boundary import (
 )
 from unplug_mcp.boundary import (
     resolve_scan_source,
-    session_status,
+)
+from unplug_mcp.boundary import (
+    session_status as _session_status,
 )
 from unplug_mcp.boundary import (
     wrap_untrusted_content as _wrap_untrusted_content,
 )
-from unplug_mcp.guard_factory import get_guard
+from unplug_mcp.guard_factory import get_guard, guard_session_lock
 from unplug_mcp.response import format_scan_response
 
 try:
@@ -82,7 +84,7 @@ def _blocked_body(exc: Exception, *, source_text: str | None = None) -> dict[str
             "error": "tool_error",
         }
     try:
-        body["session"] = session_status()
+        body["session"] = _session_status()
     except Exception:  # pragma: no cover - status is best-effort on the error path
         body["session"] = {}
     return body
@@ -102,13 +104,20 @@ def scan_text(
     """
     try:
         scan_source = resolve_scan_source(source)
-        guard = get_guard()
         if document_id:
-            guard.context.document_id = document_id
+            with guard_session_lock():
+                get_guard().context.document_id = document_id
         request = ScanRequest(text=text, source=scan_source, redact=redact, document_id=document_id)
-        result = guard.scan_request(request, isolated=not _track_session_taint(scan_source))
-        body = format_scan_response(result, source_text=text)
-        body["session"] = session_status()
+        isolated = not _track_session_taint(scan_source)
+        if isolated:
+            guard = get_guard()
+            result = guard.scan_request(request, isolated=True)
+        else:
+            with guard_session_lock():
+                guard = get_guard()
+                result = guard.scan_request(request, isolated=False)
+        body = format_scan_response(result, source_text=text, guard=guard)
+        body["session"] = _session_status()
         return body
     except Exception as exc:
         _log.error("scan_text failed: %s", type(exc).__name__)
@@ -119,11 +128,12 @@ def scan_text(
 def scan_tool_result(text: str, redact: bool = True) -> dict[str, Any]:
     """Scan tool output before the agent processes it (source=tool_output)."""
     try:
-        guard = get_guard()
         request = ScanRequest(text=text, source=Source.TOOL_OUTPUT, redact=redact)
-        result = guard.scan_output_request(request, isolated=False)
-        body = format_scan_response(result, source_text=text)
-        body["session"] = session_status()
+        with guard_session_lock():
+            guard = get_guard()
+            result = guard.scan_output_request(request, isolated=False)
+        body = format_scan_response(result, source_text=text, guard=guard)
+        body["session"] = _session_status()
         return body
     except Exception as exc:
         _log.error("scan_tool_result failed: %s", type(exc).__name__)
@@ -144,9 +154,11 @@ def check_destructive(tool_name: str, arguments_json: str = "{}") -> dict[str, A
             return _blocked_body(exc)
         if not isinstance(args, dict):
             args = {"_raw": args}
-        result = get_guard().check_tool_call(tool_name, args)
-        body = format_scan_response(result)
-        body["session"] = session_status()
+        with guard_session_lock():
+            guard = get_guard()
+            result = guard.check_tool_call(tool_name, args)
+        body = format_scan_response(result, guard=guard)
+        body["session"] = _session_status()
         return body
     except Exception as exc:
         _log.error("check_destructive failed: %s", type(exc).__name__)
@@ -176,6 +188,16 @@ def reset_session_taint() -> dict[str, Any]:
     except Exception as exc:
         # Failing to clear leaves the session tainted, which is the safe direction.
         _log.error("reset_session_taint failed: %s", type(exc).__name__)
+        return {"error": type(exc).__name__, "session_tainted": True}
+
+
+@mcp.tool()
+def session_status() -> dict[str, Any]:
+    """Return current shared-session taint and tool-call state."""
+    try:
+        return _session_status()
+    except Exception as exc:
+        _log.error("session_status failed: %s", type(exc).__name__)
         return {"error": type(exc).__name__, "session_tainted": True}
 
 

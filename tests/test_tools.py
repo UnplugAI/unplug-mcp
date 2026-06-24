@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from unplug.api.enums import Action
-from unplug.api.types import Finding, ScanResult
+from unplug.api.types import ApprovalRequest, Finding, ScanResult
 
 from unplug_mcp.guard_factory import get_guard, reset_guard
 from unplug_mcp.response import format_scan_response
@@ -36,8 +36,10 @@ def test_format_scan_response_includes_tags_and_redaction() -> None:
     assert out["action"] == "redact"
     assert out["has_redaction"] is True
     assert "[BLOCKED:injection]" in out["redacted_text"]
-    assert out["findings"][0]["span_text"] == text[0:33]
+    assert "span_text" not in out["findings"][0]
     assert out["findings"][0]["tag"] == "[BLOCKED:injection]"
+    assert out["ml_degraded"] is False
+    assert out["ml_model_loaded"] is False
 
 
 def test_scan_text_detects_injection_with_redacted_body() -> None:
@@ -48,7 +50,8 @@ def test_scan_text_detects_injection_with_redacted_body() -> None:
     assert out["finding_count"] >= 1
     assert out["redacted_text"] is not None
     assert "[BLOCKED:" in out["redacted_text"]
-    assert "findings" in out and out["findings"][0].get("span_text")
+    assert "findings" in out
+    assert "span_text" not in out["findings"][0]
 
 
 def test_scan_text_benign_weather() -> None:
@@ -81,6 +84,24 @@ def test_session_taint_review_on_side_effect_after_retrieved_scan() -> None:
     assert out["action"] == "review"
     assert out.get("approval") is not None
     assert out["approval"]["session_tainted"] is True
+
+
+def test_approval_arguments_are_redacted() -> None:
+    result = ScanResult(
+        safe=False,
+        action=Action.REVIEW,
+        risk_score=0.7,
+        findings=[],
+        latency_ms=1.0,
+        approval=ApprovalRequest(
+            tool_name="http",
+            arguments={"token": "up_live_abcdefghijklmnopqrstuvwxyz"},
+            reason="tainted session",
+            risk_score=0.7,
+        ),
+    )
+    out = format_scan_response(result)
+    assert out["approval"]["arguments"]["token"] == "[REDACTED]"
 
 
 def test_get_guard_respects_config_loader(monkeypatch) -> None:
