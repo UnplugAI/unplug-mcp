@@ -1,0 +1,43 @@
+name: Nightly Editable SDK
+
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  editable-sdk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out MCP
+        uses: actions/checkout@v6
+        with:
+          path: repos/unplug-mcp
+
+      - name: Check out SDK
+        uses: actions/checkout@v6
+        with:
+          repository: UnplugAI/Unplug
+          path: jakarta
+
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          version: "0.6.14"
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install MCP with editable SDK
+        working-directory: repos/unplug-mcp
+        run: |
+          uv sync --extra dev
+          uv pip install -e ../../jakarta/sdk
+
+      - name: Test MCP against editable SDK
+        working-directory: repos/unplug-mcp
+        run: uv run pytest -q

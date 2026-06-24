@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from unplug.core.boundaries import strip_boundary_markers
-
 from unplug_mcp.boundary import notify_taint_source, reset_session_taint, wrap_untrusted_content
 from unplug_mcp.guard_factory import reset_guard
 from unplug_mcp.server import check_destructive, scan_text
@@ -49,11 +47,14 @@ def test_wrap_strips_spoofed_markers() -> None:
     assert "do bad" not in out["wrapped_text"]
 
 
-def test_strip_roundtrip_on_wrapped_output() -> None:
+def test_wrap_scan_false_blocks_untrusted_content() -> None:
     reset_guard()
     inner = "Benign retrieved paragraph."
     out = wrap_untrusted_content(inner, source="retrieved", scan=False)
-    assert strip_boundary_markers(out["wrapped_text"]) == inner
+    assert out["safe"] is False
+    assert out["action"] == "block"
+    assert out["scan"]["redacted_text"] is not None
+    assert "scan_disabled" in {finding["subcategory"] for finding in out["scan"]["findings"]}
 
 
 def test_scan_text_includes_session() -> None:
