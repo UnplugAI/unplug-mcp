@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.1.3] — 2026-06-24
+
+- Bump `unplug-ai` dependency to `>=0.4.0,<0.5`
+
 ## [0.1.2] — 2026-06-16
 
 - Distribution docs: CHANGELOG, MARKETPLACE, PUBLISH, examples/mcp.json
