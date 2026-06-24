@@ -10,9 +10,17 @@ from unplug.api.types import Finding, ScanRequest, ScanResult
 
 from unplug_mcp.boundary import (
     notify_taint_source as _notify_taint_source,
+)
+from unplug_mcp.boundary import (
     reset_session_taint as _reset_session_taint,
+)
+from unplug_mcp.boundary import (
     resolve_scan_source,
+)
+from unplug_mcp.boundary import (
     session_status as _session_status,
+)
+from unplug_mcp.boundary import (
     wrap_untrusted_content as _wrap_untrusted_content,
 )
 from unplug_mcp.guard_factory import get_guard, guard_session_lock
