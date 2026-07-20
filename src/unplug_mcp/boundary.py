@@ -4,13 +4,13 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from unplug.api.enums import Action, Source
-from unplug.api.types import Finding, ScanRequest, ScanResult
-from unplug.core.agent.boundaries import (
+from unplug.api.boundaries import (
     SourceKind,
     sanitize_boundary_markers,
     wrap_external_content,
 )
+from unplug.api.enums import Action, Source
+from unplug.api.types import Finding, ScanRequest, ScanResult
 
 from unplug_mcp.guard_factory import get_guard, guard_session_lock
 from unplug_mcp.response import format_scan_response
