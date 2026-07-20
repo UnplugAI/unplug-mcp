@@ -6,9 +6,9 @@ from pathlib import Path
 from typing import Any
 
 from unplug import Guard
+from unplug.api.enums import Source
 from unplug.api.types import ScanRequest
 from unplug.audit.boundary import default_boundary_probes_path, run_boundary_probe_suite
-from unplug.models import Source
 
 from unplug_mcp.boundary import notify_taint_source, reset_session_taint, wrap_untrusted_content
 from unplug_mcp.guard_factory import get_guard, reset_guard

@@ -1767,12 +1767,16 @@ wheels = [
 
 [[package]]
 name = "unplug-ai"
-version = "0.4.0"
-source = { editable = "../../jakarta/sdk" }
+version = "0.5.2"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "httpx" },
     { name = "pydantic" },
     { name = "pyyaml" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/fa/2b/54eba21c91dea0cd144eb62ce6c347d221fbb30891cb0316c051a578e1f0/unplug_ai-0.5.2.tar.gz", hash = "sha256:095497be802e089d7b4666454b7ea7b27d0a0d723a29b32bb9e0f4d9f39e9482", size = 731573, upload-time = "2026-07-20T11:51:15.364Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e5/15/bf03ae447b6d18d961d6a06c009f65062f704c7acfe110a443682874c053/unplug_ai-0.5.2-py3-none-any.whl", hash = "sha256:623920b59b5c32eee3bcc5141917d2798caa8be731c9946cf435d5f494afae82", size = 219344, upload-time = "2026-07-20T11:51:14.002Z" },
 ]
 
 [package.optional-dependencies]
@@ -1783,41 +1787,6 @@ ml = [
     { name = "sentencepiece" },
     { name = "torch" },
     { name = "transformers" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "click", marker = "extra == 'presidio'", specifier = ">=8.0" },
-    { name = "firecrawl-py", marker = "extra == 'scrape'", specifier = ">=1.0" },
-    { name = "haystack-ai", marker = "extra == 'haystack'", specifier = ">=2.0" },
-    { name = "httpx", specifier = ">=0.27" },
-    { name = "huggingface-hub", marker = "extra == 'ml'", specifier = ">=0.23" },
-    { name = "litellm", marker = "extra == 'litellm'", specifier = ">=1.40" },
-    { name = "numpy", marker = "extra == 'ml'", specifier = ">=1.26" },
-    { name = "onnxruntime", marker = "extra == 'ml'", specifier = ">=1.17" },
-    { name = "presidio-analyzer", marker = "extra == 'presidio'", specifier = ">=2.2" },
-    { name = "pydantic", specifier = ">=2.0" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0" },
-    { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=0.23" },
-    { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=7.1.0" },
-    { name = "python-dotenv", marker = "extra == 'scrape'", specifier = ">=1.2.2" },
-    { name = "pyyaml", specifier = ">=6.0.3" },
-    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.4" },
-    { name = "sentencepiece", marker = "extra == 'ml'", specifier = ">=0.2" },
-    { name = "torch", marker = "extra == 'ml'", specifier = ">=2.0" },
-    { name = "transformers", marker = "extra == 'ml'", specifier = ">=4.44,<4.45" },
-    { name = "unplug-ai", extras = ["ml", "scrape", "litellm", "yara", "haystack", "presidio"], marker = "extra == 'all'" },
-    { name = "yara-python", marker = "extra == 'yara'", specifier = ">=4.5" },
-]
-provides-extras = ["ml", "litellm", "yara", "scrape", "haystack", "presidio", "all", "dev"]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "datasets", specifier = ">=4.8.5" },
-    { name = "mypy", specifier = ">=2.1.0" },
-    { name = "pyarrow", specifier = ">=24.0.0" },
-    { name = "pyyaml", specifier = ">=6.0.3" },
-    { name = "types-pyyaml", specifier = ">=6.0.12.20260518" },
 ]
 
 [[package]]
@@ -1851,10 +1820,10 @@ requires-dist = [
     { name = "mcp", specifier = ">=1.0,<2" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.4" },
-    { name = "unplug-ai", editable = "../../jakarta/sdk" },
-    { name = "unplug-ai", extras = ["ml"], marker = "extra == 'agent'", editable = "../../jakarta/sdk" },
-    { name = "unplug-ai", extras = ["ml"], marker = "extra == 'dev'", editable = "../../jakarta/sdk" },
-    { name = "unplug-ai", extras = ["ml"], marker = "extra == 'ml'", editable = "../../jakarta/sdk" },
+    { name = "unplug-ai", specifier = ">=0.5.2,<0.6" },
+    { name = "unplug-ai", extras = ["ml"], marker = "extra == 'agent'" },
+    { name = "unplug-ai", extras = ["ml"], marker = "extra == 'dev'" },
+    { name = "unplug-ai", extras = ["ml"], marker = "extra == 'ml'" },
 ]
 provides-extras = ["dev", "agent", "ml"]
 
