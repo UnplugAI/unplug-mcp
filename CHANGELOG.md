@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [0.1.4] — 2026-07-20
+
+- Pin `unplug-ai>=0.5.2,<0.6`; migrate imports to `unplug.api.*`
+- Align PR scan workflow with SDK 0.5.x
+- Document fail-closed tool semantics; add `session_status` tests
+
 ## [0.1.3] — 2026-06-24
 
 - Bump `unplug-ai` dependency to `>=0.4.0,<0.5`

@@ -106,7 +106,9 @@ def test_approval_arguments_are_redacted() -> None:
 
 def test_get_guard_respects_config_loader(monkeypatch) -> None:
     reset_guard()
-    monkeypatch.delenv("UNPLUG_ACTIVE_MODEL", raising=False)
-    monkeypatch.delenv("UNPLUG_MODEL_PATH", raising=False)
-    guard = get_guard()
-    assert guard.is_server_mode or not guard.is_server_mode
+    monkeypatch.setenv("UNPLUG_MODE", "local")
+    guard_local = get_guard()
+    monkeypatch.setenv("UNPLUG_MODE", "server")
+    guard_server = get_guard()
+    assert guard_local is not guard_server
+    assert guard_server.is_server_mode
