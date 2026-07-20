@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.1.6] — 2026-07-20
+
+- Pin `unplug-ai>=0.5.2,<0.7` so SDK 0.6.x resolves alongside `unplug-mcp`
+
 ## [0.1.5] — 2026-07-20
 
 - Fail-closed: `scan_text` defaults `source` to untrusted for session taint tracking
