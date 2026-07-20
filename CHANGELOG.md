@@ -1,7 +1,8 @@
 # Changelog
 
-## [Unreleased]
+## [0.1.5] — 2026-07-20
 
+- Fail-closed: `scan_text` defaults `source` to untrusted for session taint tracking
 - Replace agent-callable `reset_session_taint` with host-only `notify_trusted_user_turn`
   (requires `confirm_trusted_user_turn=true`; fail-closed without it)
 
