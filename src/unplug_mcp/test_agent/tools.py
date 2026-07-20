@@ -43,11 +43,11 @@ def tool_definitions() -> list[dict[str, Any]]:
                         "source": {
                             "type": "string",
                             "enum": ["user", "retrieved", "tool_output", "external"],
-                            "default": "retrieved",
+                            "description": "Provenance label; required for correct session taint.",
                         },
                         "redact": {"type": "boolean", "default": True},
                     },
-                    "required": ["text"],
+                    "required": ["text", "source"],
                 },
             },
         },
@@ -194,7 +194,7 @@ def dispatch_tool(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
     if name == "scan_text":
         return scan_text(
             text=str(arguments["text"]),
-            source=str(arguments.get("source", "retrieved")),
+            source=str(arguments["source"]),
             redact=bool(arguments.get("redact", True)),
         )
     if name == "scan_tool_result":
@@ -218,7 +218,7 @@ def dispatch_tool(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
         )
     if name == "notify_trusted_user_turn":
         return notify_trusted_user_turn(
-            confirm_trusted_user_turn=bool(arguments.get("confirm_trusted_user_turn", False)),
+            confirm_trusted_user_turn=arguments.get("confirm_trusted_user_turn") is True,
         )
     if name == "wrap_untrusted_content":
         return wrap_untrusted_content(
