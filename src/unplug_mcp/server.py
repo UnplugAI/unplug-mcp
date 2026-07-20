@@ -196,21 +196,11 @@ def notify_taint_source(tool_name: str, origin: str = "") -> dict[str, Any]:
         }
 
 
-@mcp.tool()
 def notify_trusted_user_turn(*, confirm_trusted_user_turn: bool = False) -> dict[str, Any]:
-    """Host-only: clear session taint after a real user message.
-
-    Wire this to user-turn hooks in Cursor/Claude — do **not** expose it to agent
-    tool lists. Agents must never call this after processing untrusted content;
-    prompt injection may instruct them to clear taint and bypass side-effect gates.
-
-    Requires ``confirm_trusted_user_turn=True``; otherwise the session stays tainted
-    (fail-closed).
-    """
+    """Host-only session reset — intentionally not registered as an MCP tool."""
     try:
         return _notify_trusted_user_turn(confirm_trusted_user_turn=confirm_trusted_user_turn)
     except Exception as exc:
-        # Failing to clear leaves the session tainted, which is the safe direction.
         _log.error("notify_trusted_user_turn failed: %s", type(exc).__name__)
         return {"error": type(exc).__name__, "session_tainted": True, "reset": False}
 
