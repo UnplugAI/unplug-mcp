@@ -113,7 +113,7 @@ Point at your Unplug API (same wire format as `Guard(mode="server")`):
 | `wrap_untrusted_content` | Boundary markers + scan for RAG/web content |
 | `session_status` | Session taint state for agent hardening |
 | `notify_taint_source` | Record an untrusted content source in session state |
-| `reset_session_taint` | Clear session taint tracking |
+| `notify_trusted_user_turn` | Host-only: clear session taint after a real user message |
 
 ### `scan_text` source parameter
 
@@ -127,7 +127,22 @@ Point at your Unplug API (same wire format as `Guard(mode="server")`):
 | `web_fetch`, `email`, `file`, `external`, … | Yes | Mapped to retrieved; prefer `wrap_untrusted_content` for web/RAG |
 
 Once the session is tainted, later `scan_text` calls cannot downgrade gates by claiming
-`source="user"`. Use `reset_session_taint` only after a trusted-only user turn.
+`source="user"`. Only the host may clear taint via `notify_trusted_user_turn` (see below).
+
+### Session taint reset (host-only)
+
+`notify_trusted_user_turn` replaces the old `reset_session_taint` tool. It requires
+`confirm_trusted_user_turn=true`; without it the session **stays tainted** (fail-closed).
+
+**Threat model:** Prompt injection in untrusted content may instruct an agent to call
+taint-reset tools. Agents must **never** call `notify_trusted_user_turn` after reading
+retrieved, web, email, or tool output. MCP hosts (Cursor, Claude Desktop) should:
+
+1. Wire `notify_trusted_user_turn(confirm_trusted_user_turn=true)` to **user-turn hooks**
+   (when a new human message arrives), not to agent tool lists.
+2. Omit this tool from configs where the agent can invoke every registered MCP tool.
+
+Naive calls without confirmation leave destructive tools gated at `review`.
 
 All tools **fail closed**: scan failures return `safe=false` and `action=block` so agents never proceed on errors. `session_status` and taint helpers conservatively mark the session tainted when they cannot read state.
 

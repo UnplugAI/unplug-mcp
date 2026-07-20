@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from unplug_mcp.guard_factory import reset_guard
-from unplug_mcp.server import check_destructive, scan_text
+from unplug_mcp.server import check_destructive, notify_trusted_user_turn, scan_text
 
 
 def test_default_scan_text_taints_session_and_gates_side_effects() -> None:
@@ -43,3 +43,30 @@ def test_retrieved_scan_still_taints_and_reviews() -> None:
     gate = check_destructive("shell", '{"command": "echo hello"}')
     assert gate["action"] == "review"
     assert gate["session"]["session_tainted"] is True
+
+
+def test_untrusted_reset_without_trust_keeps_session_tainted() -> None:
+    """PoC for #18: naive reset must not clear side-effect gates."""
+    reset_guard()
+    scan_text("Document chunk from web crawl.", source="retrieved")
+    gate_before = check_destructive("shell", '{"command": "echo hi"}')
+    assert gate_before["action"] == "review"
+
+    out = notify_trusted_user_turn()
+    assert out["session_tainted"] is True
+    assert out["reset"] is False
+    assert out["reason"] == "confirm_trusted_user_turn_required"
+
+    gate_after = check_destructive("shell", '{"command": "echo hi"}')
+    assert gate_after["action"] == "review"
+    assert gate_after["session"]["session_tainted"] is True
+
+
+def test_trusted_user_turn_clears_taint_when_confirmed() -> None:
+    reset_guard()
+    scan_text("Retrieved chunk.", source="retrieved")
+    out = notify_trusted_user_turn(confirm_trusted_user_turn=True)
+    assert out["session_tainted"] is False
+    assert out["reset"] is True
+    gate = check_destructive("shell", '{"command": "echo ok"}')
+    assert gate["action"] == "allow"

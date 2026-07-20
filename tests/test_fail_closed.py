@@ -11,7 +11,7 @@ from unplug_mcp.guard_factory import reset_guard
 from unplug_mcp.server import (
     check_destructive,
     notify_taint_source,
-    reset_session_taint,
+    notify_trusted_user_turn,
     scan_text,
     scan_tool_result,
     wrap_untrusted_content,
@@ -151,15 +151,16 @@ class TestToolErrorsBlock:
         assert out["session_tainted"] is True
         assert "error" in out
 
-    def test_reset_taint_exception_keeps_tainted(self, monkeypatch) -> None:
+    def test_notify_trusted_user_turn_exception_keeps_tainted(self, monkeypatch) -> None:
         reset_guard()
 
         def boom(*_args, **_kwargs):
             raise RuntimeError("reset exploded")
 
-        monkeypatch.setattr(server, "_reset_session_taint", boom)
-        out = reset_session_taint()
+        monkeypatch.setattr(server, "_notify_trusted_user_turn", boom)
+        out = notify_trusted_user_turn(confirm_trusted_user_turn=True)
         assert out["session_tainted"] is True
+        assert out["reset"] is False
         assert "error" in out
 
 

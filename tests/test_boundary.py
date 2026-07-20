@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
-from unplug_mcp.boundary import notify_taint_source, reset_session_taint, wrap_untrusted_content
+from unplug_mcp.boundary import (
+    notify_taint_source,
+    notify_trusted_user_turn,
+    wrap_untrusted_content,
+)
 from unplug_mcp.guard_factory import reset_guard
 from unplug_mcp.server import check_destructive, scan_text, session_status
 
@@ -22,10 +26,10 @@ def test_notify_taint_source_side_effect_review() -> None:
     assert review["session"]["session_tainted"] is True
 
 
-def test_reset_session_taint_clears_review() -> None:
+def test_notify_trusted_user_turn_clears_review() -> None:
     reset_guard()
     scan_text("chunk", source="retrieved")
-    reset_session_taint()
+    notify_trusted_user_turn(confirm_trusted_user_turn=True)
     out = check_destructive("shell", '{"command": "echo ok"}')
     assert out["action"] == "allow"
 

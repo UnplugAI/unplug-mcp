@@ -10,7 +10,11 @@ from unplug.api.enums import Source
 from unplug.api.types import ScanRequest
 from unplug.audit.boundary import default_boundary_probes_path, run_boundary_probe_suite
 
-from unplug_mcp.boundary import notify_taint_source, reset_session_taint, wrap_untrusted_content
+from unplug_mcp.boundary import (
+    notify_taint_source,
+    notify_trusted_user_turn,
+    wrap_untrusted_content,
+)
 from unplug_mcp.guard_factory import get_guard, reset_guard
 from unplug_mcp.server import check_destructive, scan_text, scan_tool_result
 from unplug_mcp.test_agent.env import (
@@ -285,11 +289,11 @@ def run_sdk_integration_suite(
     )
 
     reset_guard()
-    reset_out = reset_session_taint()
+    reset_out = notify_trusted_user_turn(confirm_trusted_user_turn=True)
     checks.append(
         _check(
-            "reset_session_taint_mcp",
-            reset_out["session_tainted"] is False,
+            "notify_trusted_user_turn_mcp",
+            reset_out["session_tainted"] is False and reset_out.get("reset") is True,
             f"triggers={reset_out.get('taint_triggers')}",
         )
     )
