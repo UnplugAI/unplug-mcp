@@ -107,13 +107,27 @@ Point at your Unplug API (same wire format as `Guard(mode="server")`):
 
 | Tool | Purpose |
 |------|---------|
-| `scan_text` | Scan user or retrieved content for injection/leakage |
+| `scan_text` | Scan text for injection/leakage (default `source=retrieved`, session-tainting) |
 | `scan_tool_result` | Scan tool output before the agent reads it |
 | `check_destructive` | Gate side-effect tool calls |
 | `wrap_untrusted_content` | Boundary markers + scan for RAG/web content |
 | `session_status` | Session taint state for agent hardening |
 | `notify_taint_source` | Record an untrusted content source in session state |
 | `reset_session_taint` | Clear session taint tracking |
+
+### `scan_text` source parameter
+
+`scan_text` defaults to **`source="retrieved"`** so scans participate in session taint and
+`check_destructive` can require human review after untrusted input (fail-closed for agent hosts).
+
+| `source` | Session taint | When to use |
+|----------|---------------|-------------|
+| `retrieved` (default) | Yes | RAG chunks, docs, or any content when provenance is unclear |
+| `user`, `system` | No (clean session only) | Host-attested direct user or system messages only |
+| `web_fetch`, `email`, `file`, `external`, … | Yes | Mapped to retrieved; prefer `wrap_untrusted_content` for web/RAG |
+
+Once the session is tainted, later `scan_text` calls cannot downgrade gates by claiming
+`source="user"`. Use `reset_session_taint` only after a trusted-only user turn.
 
 All tools **fail closed**: scan failures return `safe=false` and `action=block` so agents never proceed on errors. `session_status` and taint helpers conservatively mark the session tainted when they cannot read state.
 
