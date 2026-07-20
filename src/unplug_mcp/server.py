@@ -38,9 +38,19 @@ mcp = FastMCP("unplug")
 
 
 def _track_session_taint(source: str | Source) -> bool:
-    """Untrusted sources share Guard session state for side-effect review gates."""
+    """Return whether scan_text participates in shared session taint state.
+
+    Untrusted sources always track taint. Trusted labels (user/system) skip taint
+    only on a clean session — a spoofed safer source cannot downgrade gates once
+    the session is already tainted.
+    """
     src = resolve_scan_source(source) if isinstance(source, str) else source
-    return src in (Source.RETRIEVED, Source.TOOL_OUTPUT)
+    if src in (Source.RETRIEVED, Source.TOOL_OUTPUT):
+        return True
+    with guard_session_lock():
+        if get_guard().context.is_session_tainted:
+            return True
+    return False
 
 
 def _blocked_body(exc: Exception, *, source_text: str | None = None) -> dict[str, Any]:
@@ -93,11 +103,17 @@ def _blocked_body(exc: Exception, *, source_text: str | None = None) -> dict[str
 @mcp.tool()
 def scan_text(
     text: str,
-    source: str = "user",
+    source: str = "retrieved",
     document_id: str | None = None,
     redact: bool = True,
 ) -> dict[str, Any]:
-    """Scan user or retrieved text for prompt injection and related threats.
+    """Scan text for prompt injection and related threats.
+
+    Defaults to ``source="retrieved"`` (fail-closed): scans participate in session
+    taint so later ``check_destructive`` can require review after untrusted input.
+    Pass ``source="user"`` or ``source="system"`` only for host-attested trusted
+    input (direct user/system messages). For RAG, web, email, or file content use
+    ``wrap_untrusted_content`` or an explicit untrusted ``source`` label.
 
     Returns safe/action/risk_score, span findings with tags, and redacted_text
     (malicious spans replaced with [BLOCKED:category] when redact=true).
