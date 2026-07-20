@@ -6,10 +6,14 @@ from typing import Any
 
 from unplug_mcp.boundary import (
     notify_taint_source,
-    reset_session_taint,
     wrap_untrusted_content,
 )
-from unplug_mcp.server import check_destructive, scan_text, scan_tool_result
+from unplug_mcp.server import (
+    check_destructive,
+    notify_trusted_user_turn,
+    scan_text,
+    scan_tool_result,
+)
 from unplug_mcp.test_agent.probes import run_fp_probe_suite
 from unplug_mcp.test_agent.sdk_suite import get_guard_status, run_sdk_integration_suite
 
@@ -107,9 +111,24 @@ def tool_definitions() -> list[dict[str, Any]]:
         {
             "type": "function",
             "function": {
-                "name": "reset_session_taint",
-                "description": "Clear session taint after a trusted-only user turn.",
-                "parameters": {"type": "object", "properties": {}},
+                "name": "notify_trusted_user_turn",
+                "description": (
+                    "Host-only: clear session taint after a real user message. "
+                    "Requires confirm_trusted_user_turn=true."
+                ),
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "confirm_trusted_user_turn": {
+                            "type": "boolean",
+                            "default": False,
+                            "description": (
+                                "Must be true to clear taint. "
+                                "Hosts wire this to user-turn hooks only."
+                            ),
+                        },
+                    },
+                },
             },
         },
         {
@@ -197,8 +216,10 @@ def dispatch_tool(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
             str(arguments["tool_name"]),
             origin=str(arguments.get("origin", "")),
         )
-    if name == "reset_session_taint":
-        return reset_session_taint()
+    if name == "notify_trusted_user_turn":
+        return notify_trusted_user_turn(
+            confirm_trusted_user_turn=bool(arguments.get("confirm_trusted_user_turn", False)),
+        )
     if name == "wrap_untrusted_content":
         return wrap_untrusted_content(
             text=str(arguments["text"]),

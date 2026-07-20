@@ -78,11 +78,33 @@ def notify_taint_source(tool_name: str, *, origin: str = "") -> dict[str, Any]:
 
 
 def reset_session_taint() -> dict[str, Any]:
-    """Clear session taint (e.g. new trusted user turn)."""
+    """Clear session taint (internal/tests only — not an MCP agent tool)."""
     with guard_session_lock():
         guard = get_guard()
         guard.reset_session_taint()
         return _session_status_locked(guard)
+
+
+def notify_trusted_user_turn(*, confirm_trusted_user_turn: bool = False) -> dict[str, Any]:
+    """Host-only: clear session taint after a real user message.
+
+    MCP hosts (Cursor, Claude Desktop, etc.) should wire this to user-turn hooks
+    and must not expose it in agent tool lists. Agents must never call this after
+    reading untrusted content — prompt injection may instruct them to do so.
+
+    Fail-closed: without ``confirm_trusted_user_turn=True`` the session stays tainted.
+    """
+    with guard_session_lock():
+        guard = get_guard()
+        if not confirm_trusted_user_turn:
+            status = _session_status_locked(guard)
+            status["reset"] = False
+            status["reason"] = "confirm_trusted_user_turn_required"
+            return status
+        guard.reset_session_taint()
+        status = _session_status_locked(guard)
+        status["reset"] = True
+        return status
 
 
 def _scan_content(

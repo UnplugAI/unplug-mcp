@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+- Replace agent-callable `reset_session_taint` with host-only `notify_trusted_user_turn`
+  (requires `confirm_trusted_user_turn=true`; fail-closed without it)
+
 ## [0.1.4] — 2026-07-20
 
 - Pin `unplug-ai>=0.5.2,<0.6`; migrate imports to `unplug.api.*`
