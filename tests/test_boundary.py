@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from unplug_mcp.boundary import notify_taint_source, reset_session_taint, wrap_untrusted_content
 from unplug_mcp.guard_factory import reset_guard
-from unplug_mcp.server import check_destructive, scan_text
+from unplug_mcp.server import check_destructive, scan_text, session_status
 
 
 def test_notify_taint_source_marks_session() -> None:
@@ -57,8 +57,27 @@ def test_wrap_scan_false_blocks_untrusted_content() -> None:
     assert "scan_disabled" in {finding["subcategory"] for finding in out["scan"]["findings"]}
 
 
-def test_scan_text_includes_session() -> None:
+def test_session_status_clean_session() -> None:
     reset_guard()
-    out = scan_text("hello", source="retrieved")
-    assert "session" in out
-    assert out["session"]["session_tainted"] is True
+    out = session_status()
+    assert out["session_tainted"] is False
+    assert "error" not in out
+
+
+def test_session_status_after_taint() -> None:
+    reset_guard()
+    notify_taint_source("web_fetch")
+    out = session_status()
+    assert out["session_tainted"] is True
+
+
+def test_session_status_fail_closed(monkeypatch) -> None:
+    reset_guard()
+
+    def _boom() -> dict[str, object]:
+        raise RuntimeError("fail")
+
+    monkeypatch.setattr("unplug_mcp.server._session_status", _boom)
+    out = session_status()
+    assert out["error"] == "RuntimeError"
+    assert out["session_tainted"] is True

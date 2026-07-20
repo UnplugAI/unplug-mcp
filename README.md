@@ -115,6 +115,8 @@ Point at your Unplug API (same wire format as `Guard(mode="server")`):
 | `notify_taint_source` | Record an untrusted content source in session state |
 | `reset_session_taint` | Clear session taint tracking |
 
+All tools **fail closed**: scan failures return `safe=false` and `action=block` so agents never proceed on errors. `session_status` and taint helpers conservatively mark the session tainted when they cannot read state.
+
 ## CI
 
 - `ci.yml` — lint + pytest against PyPI `unplug-ai`
