@@ -14,4 +14,4 @@ uv run ruff check . && uv run ruff format --check .
 
 - Python 3.11+, uv, ruff, pytest
 - `from __future__ import annotations` in every file
-- SDK is a pip dependency (`unplug>=0.2.0`)
+- SDK is a pip dependency (`unplug-ai>=0.5.2,<0.7`)

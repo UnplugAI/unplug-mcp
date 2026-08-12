@@ -26,7 +26,7 @@
 ## Post-release verification
 
 ```bash
-pip install unplug-mcp==0.1.1
+pip install unplug-mcp==0.1.6
 python -c "import unplug_mcp; print(unplug_mcp.__version__)"
 ```
 
